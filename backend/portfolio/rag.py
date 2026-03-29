@@ -104,8 +104,26 @@ def ask_portfolio(question: str) -> dict:
         }
 
     try:
-        # Build context from the database
-        context = _get_portfolio_context()
+        # Retrieve context based on the RAG_BACKEND setting
+        from django.conf import settings as django_settings
+        rag_backend = getattr(django_settings, 'RAG_BACKEND', 'database')
+
+        if rag_backend == 'pinecone':
+            # --- Pinecone vector DB mode ---
+            try:
+                from .rag_pinecone import retrieve_chunks
+                chunks = retrieve_chunks(question, top_k=5)
+                if chunks:
+                    context = "\n\n---\n\n".join(chunks)
+                else:
+                    # Pinecone returned nothing, fall back to DB
+                    context = _get_portfolio_context()
+            except Exception:
+                # Pinecone errored, fall back to DB
+                context = _get_portfolio_context()
+        else:
+            # --- Database mode (default) ---
+            context = _get_portfolio_context()
 
         if not context.strip():
             return {

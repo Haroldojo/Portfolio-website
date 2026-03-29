@@ -37,7 +37,12 @@ const Home = () => {
             </div>
         );
     }
+    if (!profile) {
+        return <div className="text-center text-accent mt-20">Failed to load profile.</div>;
+    }
 
+    const title = profile?.title || "";
+    const titleParts = title.split(" & ");
     const expertise = [
         {
             title: "UI/UX Design",
@@ -79,7 +84,7 @@ const Home = () => {
                         transition={{ delay: 0.2 }}
                         className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-[0.9] mb-8"
                     >
-                        {profile?.title.split(' & ').map((part, i) => (
+                        {titleParts.map((part, i) => (
                             <React.Fragment key={i}>
                                 {i === 1 && <span className="text-accent">&</span>}
                                 <span className={i === 1 ? 'text-accent ml-2' : ''}>{part}</span>

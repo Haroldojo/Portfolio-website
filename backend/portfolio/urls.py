@@ -4,7 +4,7 @@ from .views import (
     ProfileViewSet, SkillViewSet, ExperienceViewSet, 
     EducationViewSet, TechnologyViewSet, ProjectViewSet,
     StatViewSet, ContactMessageCreateView, download_resume,
-    ai_search
+    ai_search, ResumeImportAPIView
 )
 
 router = DefaultRouter()
@@ -21,5 +21,5 @@ urlpatterns = [
     path('contact/', ContactMessageCreateView.as_view(), name='contact'),
     path('resume/download/', download_resume, name='resume-download'),
     path('ai-search/', ai_search, name='ai-search'),
+    path('admin/import-resume/', ResumeImportAPIView.as_view(), name='import-resume'),
 ]
-

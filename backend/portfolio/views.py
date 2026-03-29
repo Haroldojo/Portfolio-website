@@ -1,6 +1,8 @@
 from rest_framework import viewsets, generics, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from .models import Profile, Skill, Experience, Education, Technology, Project, Stat, ContactMessage
@@ -9,6 +11,7 @@ from .serializers import (
     EducationSerializer, TechnologySerializer, ProjectSerializer,
     ProjectListSerializer, StatSerializer, ContactMessageSerializer
 )
+from .utils import admin_token_required
 
 
 class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
@@ -143,3 +146,48 @@ def ai_search(request):
     result = ask_portfolio(query)
 
     return Response(result, status=status.HTTP_200_OK)
+
+
+class ResumeImportAPIView(APIView):
+    """
+    Admin-only endpoint to import a PDF resume.
+    Parses the PDF using Groq LLM and syncs data into the database.
+    Requires X-ADMIN-TOKEN header.
+    """
+    parser_classes = [MultiPartParser, FormParser]
+
+    @admin_token_required
+    def post(self, request):
+        from .services import process_resume_file
+
+        if "file" not in request.FILES:
+            return Response(
+                {"detail": "No file provided. Upload a PDF with the key 'file'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        file_obj = request.FILES["file"]
+
+        # Validate file type
+        if not file_obj.name.lower().endswith(".pdf"):
+            return Response(
+                {"detail": "Only PDF files are accepted."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            process_resume_file(file_obj)
+            return Response(
+                {"detail": "Resume imported successfully! All portfolio data has been updated."},
+                status=status.HTTP_200_OK,
+            )
+        except ValueError as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            return Response(
+                {"detail": f"Import failed: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

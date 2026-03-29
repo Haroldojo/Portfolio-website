@@ -8,6 +8,7 @@ import Projects from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';
 import Resume from './pages/Resume';
 import Contact from './pages/Contact';
+import AdminResumeImport from './pages/AdminResumeImport';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
             <Route path="/about" element={<Home />} /> {/* About scrolls to section on Home */}
             <Route path="/resume" element={<Resume />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/admin/import-resume" element={<AdminResumeImport />} />
           </Routes>
         </main>
         <Footer />

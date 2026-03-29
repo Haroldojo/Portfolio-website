@@ -13,9 +13,14 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 import os
 from decouple import config
+import dj_database_url
+from corsheaders.defaults import default_headers
+from dotenv import load_dotenv  # or django-environ
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env") 
 
 
 # Quick-start development settings - unsuitable for production
@@ -82,11 +87,14 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+DEFAULT_SQLITE_URL = f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    "default": dj_database_url.config(
+        env="DATABASE_URL",
+        default=DEFAULT_SQLITE_URL,
+        conn_max_age=600,
+    )
 }
 
 
@@ -139,6 +147,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS settings
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:5173').split(',')
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "x-admin-token",
+]
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -147,3 +158,11 @@ REST_FRAMEWORK = {
     ],
 }
 
+# Admin API token for secure endpoints (resume import)
+ADMIN_API_TOKEN = config("ADMIN_API_TOKEN", default="")
+# RAG Backend switch: "database" (Django DB) or "pinecone" (Vector DB)
+RAG_BACKEND = os.getenv("RAG_BACKEND", "database").strip().lower()
+
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY") or os.getenv("Pinecone_API_KEY", "")
+PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "portfolio-index")
+PINECONE_ENV = os.getenv("PINECONE_ENV", "us-east-1")

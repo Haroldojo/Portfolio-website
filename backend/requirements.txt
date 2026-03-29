@@ -14,4 +14,4 @@ groq
 langchain-groq
 langchain-core
 pinecone
-sentence-transformers
+# sentence-transformers

@@ -1,0 +1,52 @@
+
+name: Daily Portfolio Health Check
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  check-services:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Render Backend
+        run: |
+          curl -fLsS --max-time 60 \
+            https://portfolio-backend-xbrc.onrender.com \
+            -o /dev/null
+          echo "Backend responded successfully"
+
+      - name: Check Render Frontend
+        run: |
+          curl -fLsS --max-time 60 \
+            https://portfolio-frontend-tvln.onrender.com \
+            -o /dev/null
+          echo "Frontend responded successfully"
+
+      - name: Check Supabase API
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "Missing Supabase GitHub Secrets"
+            exit 1
+          fi
+
+          HTTP_CODE=$(curl -sS --max-time 30 \
+            -o /tmp/supabase-response.txt \
+            -w "%{http_code}" \
+            "$SUPABASE_URL/rest/v1/" \
+            -H "apikey: $SUPABASE_ANON_KEY")
+
+          echo "Supabase API HTTP status: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 500 ]; then
+            echo "Supabase API endpoint responded"
+          else
+            echo "Supabase API check failed"
+            cat /tmp/supabase-response.txt
+            exit 1
+          fi

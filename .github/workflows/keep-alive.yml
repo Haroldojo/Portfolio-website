@@ -13,8 +13,8 @@ jobs:
     steps:
       - name: Check Render Backend
         run: |
-          curl -fLsS --max-time 60 \
-            https://portfolio-backend-xbrc.onrender.com \
+          curl -fLsS --max-time 90 \
+            https://portfolio-backend-xbrc.onrender.com/health/ \
             -o /dev/null
           echo "Backend responded successfully"
 
